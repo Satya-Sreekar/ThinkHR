@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}ThinkHR{% endblock %}
+{% block content %}
+<!-- Content -->
+<div class="content">
+    <div class="dashboard-row">
+        <!-- Total Employees Widget -->
+        <div class="widget">
+            <i class="fas fa-users"></i>
+            <h4>Total Employees</h4>
+            <p>{{ total_staff }}</p>
+        </div>
+        <!-- Attendance Widget -->
+        <div class="widget">
+            <i class="fas fa-clock"></i>
+            <h4>Present Today</h4>
+            <p>{{ present_today }}</p>
+        </div>
+        <!-- Tasks Widget -->
+        <div class="widget">
+            <i class="fas fa-tasks"></i>
+            <h4>Pending Tasks</h4>
+            <p>{{ pending_tasks }}</p>
+        </div>
+        <!-- Announcements Widget -->
+        <a href="/onboard" class="widget">
+            <i class="fas fa-user-plus"></i>
+            <h4>Onboard</h4>
+            <p>{{ announcements }}</p>
+        </a>
+        <!-- Departments Widget -->
+        <a href="/departments" class="widget">
+            <i class="fas fa-building"></i>
+            <h4>Departments</h4>
+            <p>{{ department_count}}</p>
+        </a>
+    </div>
+</div>
+
+{% endblock %}

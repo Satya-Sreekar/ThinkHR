@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Departments - ThinkHR{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Departments</h1>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Department Name</th>
+                <th>Department ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dept in department_list %}
+            <tr>
+                <td>{{ dept[1] }}</td>
+                <td>{{ dept[0] }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <form action="/add_department" method="POST">
+                    <td>
+                        <div class="form-group">
+                            <input type="text" placeholder="Add A New Department" class="form-control" id="department_name" name="department_name" required>
+                        </div>
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </td>
+                </form>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

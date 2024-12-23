@@ -1,0 +1,32 @@
+/* summary.css */
+
+/* Styles for navigation arrows */
+.nav-arrow {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    line-height: 36px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #333;
+    text-decoration: none;
+    font-size: 24px;
+    user-select: none;
+}
+
+.nav-arrow.disabled {
+    pointer-events: none;
+    color: gray;
+    border-color: #eaeaea;
+}
+
+.nav-arrow:not(.disabled):hover {
+    background-color: #f0f0f0;
+    cursor: pointer;
+}
+
+/* Change cursor to pointer when hovering over attendance cells */
+.attendance-cell {
+    cursor: pointer;
+}

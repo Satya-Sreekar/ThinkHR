@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Summary - ThinkHR{% endblock %}
+
+{% block content %}
+<!-- Content -->
+<div class="content">
+    <h1 class="text-center">Attendance Summary</h1>
+
+    <!-- Period selection tabs -->
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if period == 'daily' %}active{% endif %}" href="?period=daily">Daily</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if period == 'weekly' %}active{% endif %}" href="?period=weekly">Weekly</a>
+        </li>
+    </ul>
+
+    <!-- Navigation arrows and date display -->
+    <div class="text-center mb-4 mt-4">
+        <p>First Available Date: {{ min_date }} | Last Available Date: {{ max_date }}</p>
+        {% if period == 'daily' %}
+        <a href="{% if previous_date and selected_date > min_date %}?date={{ previous_date }}&period=daily{% else %}#{% endif %}"
+            class="nav-arrow {% if not previous_date or selected_date <= min_date %}disabled{% endif %}"
+            title="{% if selected_date <= min_date %}First Date{% else %}Previous Date{% endif %}">
+            &lt;
+        </a>
+        <span class="mx-3">{{ selected_date }}</span>
+        <a href="{% if next_date and selected_date < max_date %}?date={{ next_date }}&period=daily{% else %}#{% endif %}"
+            class="nav-arrow {% if not next_date or selected_date >= max_date %}disabled{% endif %}"
+            title="{% if selected_date >= max_date %}Last Date{% else %}Next Date{% endif %}">
+            &gt;
+        </a>
+        {% elif period == 'weekly' %}
+        <a href="{% if previous_week and week_start > min_date %}?date={{ previous_week }}&period=weekly{% else %}#{% endif %}"
+            class="nav-arrow {% if not previous_week or week_start <= min_date %}disabled{% endif %}"
+            title="{% if week_start <= min_date %}First Week{% else %}Previous Week{% endif %}">
+            &lt;
+        </a>
+        <span class="mx-3">{{ week_start }} - {{ week_end }}</span>
+        <a href="{% if next_week and week_end < max_date %}?date={{ next_week }}&period=weekly{% else %}#{% endif %}"
+            class="nav-arrow {% if not next_week or week_end >= max_date %}disabled{% endif %}"
+            title="{% if week_end >= max_date %}Last Week{% else %}Next Week{% endif %}">
+            &gt;
+        </a>
+        {% endif %}
+    </div>
+
+    {% if period == 'daily' %}
+    <!-- Daily summary table -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Staff Name</th>
+                <th>First Check-in</th>
+                <th>Last Check-out</th>
+                <th>Effective Hours</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in summary_data %}
+            <tr>
+                <td>{{ data.0 }}</td>
+                <td>
+                    {% if data.1 %}
+                    {{ data.1.strftime("%I:%M %p") }}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if data.2 %}
+                    {{ data.2.strftime("%I:%M %p") }}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>{{ data.3|default("N/A") }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% elif period == 'weekly' %}
+    <!-- Weekly summary table -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Staff Name</th>
+                {% for day in range(7) %}
+                <th>{{ (week_start + timedelta(days=day)).strftime('%A') }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for staff_name, days in summary_data.items() %}
+            <tr>
+                <td>{{ staff_name }}</td>
+                {% for date_str, data in days.items() %}
+                <td class="text-center attendance-cell" title="
+First Check-in: {% if data.first_checkin %}{{ data.first_checkin.strftime('%I:%M %p') }}{% else %}N/A{% endif %}&#10;
+Last Check-out: {% if data.last_checkout %}{{ data.last_checkout.strftime('%I:%M %p') }}{% else %}N/A{% endif %}&#10;
+Effective Hours: {{ data.effective_hours|default('N/A') }}">
+                    {% if data.status == 'present' %}
+                    <span style="color: green;">&#10003;</span>
+                    {% else %}
+                    <span style="color: red;">&#10005;</span>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+
+{% endblock %}

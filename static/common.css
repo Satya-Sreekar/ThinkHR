@@ -1,0 +1,137 @@
+/* Common styles for all pages */
+
+/* Reset body */
+body {
+    display: flex;
+    overflow-x: hidden;
+}
+
+/* Sidebar styles */
+.sidebar {
+    width: 80px;
+    background-color: #f8f9fa;
+    transition: width 0.5s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    position: fixed;
+    height: 100vh;
+}
+
+.sidebar:hover {
+    width: 250px;
+}
+
+/* Logo section */
+.sidebar .logo {
+    width: 100%;
+    height: 100px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    transition: all 0.5s ease;
+}
+
+.sidebar:hover .logo {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding-left: 15px;
+}
+
+.sidebar .logo img {
+    height: 50px;
+    width: auto;
+    transition: all 0.5s ease;
+}
+
+.sidebar .logo-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.2rem;
+    /* Collapsed text size */
+    font-weight: bold;
+    white-space: nowrap;
+    margin-top: 5px;
+    transition: all 0.5s ease, margin 0.5s ease, font-size 0.5s ease;
+    text-align: center;
+}
+
+.sidebar:hover .logo-text {
+    font-size: 1.8rem;
+    /* Uncollapsed text size */
+    margin-top: 0;
+    margin-left: 8px;
+    /* Space between logo and text */
+    text-align: left;
+}
+
+.sidebar .logo-text span:first-child {
+    color: black;
+}
+
+.sidebar .logo-text span:last-child {
+    color: #FF5055;
+}
+
+/* Navigation styles */
+.sidebar .nav {
+    flex-grow: 1;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    width: 100%;
+}
+
+.sidebar .nav-item {
+    width: 100%;
+}
+
+
+.sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 15px;
+    /* margin-left: 17.5%; */
+    white-space: nowrap;
+    transition: all 0.5s ease;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #e9ecef;
+}
+.sidebar .nav-link i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+    line-height: 1;
+    /* Ensures consistent height */
+    min-width: 24px;
+    text-align: center;
+}
+
+.sidebar .nav-link span {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.5s ease-in-out;
+}
+
+.sidebar:hover .nav-link span {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Content styles */
+.content {
+    margin-left: 80px;
+    padding: 20px;
+    width: calc(100% - 80px);
+    transition: margin-left 0.5s ease, width 0.5s ease;
+}
+
+.sidebar:hover~.content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+}
