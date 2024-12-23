@@ -204,28 +204,40 @@ def company_hierarchy():
         FROM staff s
         JOIN department d ON s.department = d.id
     """)
-    
+
     # Fetch all staff data
     staff_data = cursor.fetchall()
 
-    # Create a dictionary to map managers to their reports
-    staff_hierarchy = {}
+    # Create a dictionary to map staff by their id
+    staff_dict = {staff[0]: {'id': staff[0], 'name': staff[1], 'reportee': staff[2], 'department': staff[3], 'subordinates': []} for staff in staff_data}
 
-    # Loop through staff and create nested hierarchy
+    # Build the hierarchy (tree structure)
     for staff in staff_data:
         staff_id, name, manager_id, department_name = staff
-        staff_hierarchy.setdefault(manager_id, {'manager': name, 'department': department_name, 'subordinates': []})
-        if manager_id != 0:  # If the manager_id is not 0 (skip top-level managers)
-            staff_hierarchy[manager_id]['subordinates'].append({
-                'id': staff_id,
-                'name': name,
-                'department': department_name
-            })
+        if manager_id != 0:  # If the staff member has a manager
+            staff_dict[manager_id]['subordinates'].append(staff_dict[staff_id])
 
-    # Fetch top-level managers (staff with reportee = 0)
-    top_managers = [s for s in staff_data if s[2] == 0]  # reportee = 0 for top-level managers
+    # Top-level managers (those with reportee = 0)
+    top_managers = [staff_dict[staff[0]] for staff in staff_data if staff[2] == 0]
 
-    return render_template('hierarchy.html', staff_hierarchy=staff_hierarchy, top_managers=top_managers)
+    # Limit the recursion level to avoid exceeding max recursion depth
+    def build_tree(manager, level=1):
+        """ Recursively build a tree but keep track of recursion depth """
+        tree = {
+            'name': manager['name'],
+            'department': manager['department'],
+            'subordinates': []
+        }
+
+        if level < 11:  # Set maximum depth
+            for sub in manager['subordinates']:
+                tree['subordinates'].append(build_tree(sub, level + 1))
+        return tree
+
+    # Convert staff data to a tree with limited depth
+    tree_data = [build_tree(manager) for manager in top_managers]
+
+    return render_template('hierarchy.html', tree_data=tree_data)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

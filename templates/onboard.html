@@ -24,6 +24,7 @@
             <label for="reportee">Reportee</label>
             <select class="form-control" id="reportee" name="reportee" required>
                 <option value="" disabled selected>Reports to</option>
+                <option value="0">No One (HOD)</option>
                 {% for staff in staff_list %}
                 <option value="{{ staff[0] }}">{{ staff[1] }}</option>
                 {% endfor %}
