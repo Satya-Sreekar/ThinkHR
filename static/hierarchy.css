@@ -1,0 +1,36 @@
+.hierarchy-container {
+    margin: 20px;
+}
+
+.manager {
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.subordinates {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.subordinate {
+    padding-left: 40px;
+}
+
+.subordinates li {
+    margin: 5px 0;
+}
+
+h2 {
+    font-size: 1.5em;
+    color: #2c3e50;
+}
+
+h3 {
+    font-size: 1.2em;
+    color: #34495e;
+}
+
+h4 {
+    font-size: 1em;
+    color: #7f8c8d;
+}

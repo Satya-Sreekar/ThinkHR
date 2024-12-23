@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Company Hierarchy
+{% endblock %}
+
+{% block content %}
+    <h1>Company Hierarchy</h1>
+
+    {% if top_managers %}
+        <h2>Top Managers</h2>
+        {% for manager in top_managers %}
+            <div class="manager">
+                <h3>{{ manager[1] }} ({{ manager[3] }})</h3>  <!-- Manager Name and Department -->
+                {% if staff_hierarchy.get(manager[0]) %}
+                    <ul class="subordinates">
+                        {% for subordinate in staff_hierarchy[manager[0]].subordinates %}
+                            <li>{{ subordinate.name }} ({{ subordinate.department }})</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No subordinates</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No top-level managers found.</p>
+    {% endif %}
+    
+{% endblock %}

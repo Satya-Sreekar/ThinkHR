@@ -27,8 +27,7 @@ def index():
     cursor.execute("SELECT COUNT(id) FROM department")
     department_count = cursor.fetchone()[0]
     return render_template('index.html', total_staff=total_staff, present_today=checked_in_today, department_count=department_count)
-
-    
+   
 @app.route('/admin')
 def admin():
     cursor = mysql.connection.cursor()
@@ -103,8 +102,6 @@ def delete_staff(staff_id):
     flash('Staff deleted successfully!', 'success')
     return redirect(url_for('admin'))
 
-
-#Attandance Summary
 @app.route('/summary')
 def summary():
     period = request.args.get('period', 'daily')
@@ -175,12 +172,14 @@ def summary():
         next_week = (week_start + timedelta(weeks=1)) if max_date and week_start + timedelta(weeks=1) <= datetime.now().date() else None
 
         return render_template('summary.html', summary_data=summary_data, period='weekly', week_start=week_start, week_end=week_end, previous_week=previous_week, next_week=next_week, min_date=min_date, max_date=max_date, timedelta=timedelta)
+
 @app.route('/departments')
 def department():
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM department")
     department_list = cursor.fetchall()
     return render_template('departments.html', department_list=department_list)
+
 @app.route('/add_department', methods=['POST'])
 def add_department():
     if request.method == 'POST':
@@ -193,5 +192,40 @@ def add_department():
         else:
             flash('Please fill in all fields.', 'danger')
         return redirect(url_for('department'))   
+
+
+@app.route('/company_hierarchy')
+def company_hierarchy():
+    cursor = mysql.connection.cursor()
+
+    # Query to fetch all staff members with department and their direct managers
+    cursor.execute("""
+        SELECT s.id, s.name, s.reportee, d.name AS department_name
+        FROM staff s
+        JOIN department d ON s.department = d.id
+    """)
+    
+    # Fetch all staff data
+    staff_data = cursor.fetchall()
+
+    # Create a dictionary to map managers to their reports
+    staff_hierarchy = {}
+
+    # Loop through staff and create nested hierarchy
+    for staff in staff_data:
+        staff_id, name, manager_id, department_name = staff
+        staff_hierarchy.setdefault(manager_id, {'manager': name, 'department': department_name, 'subordinates': []})
+        if manager_id != 0:  # If the manager_id is not 0 (skip top-level managers)
+            staff_hierarchy[manager_id]['subordinates'].append({
+                'id': staff_id,
+                'name': name,
+                'department': department_name
+            })
+
+    # Fetch top-level managers (staff with reportee = 0)
+    top_managers = [s for s in staff_data if s[2] == 0]  # reportee = 0 for top-level managers
+
+    return render_template('hierarchy.html', staff_hierarchy=staff_hierarchy, top_managers=top_managers)
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
