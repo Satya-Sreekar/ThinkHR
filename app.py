@@ -94,7 +94,7 @@ def edit_staff(staff_id):
         return redirect(url_for('admin'))
     cursor.execute("SELECT * FROM staff WHERE id = %s", [staff_id])
     staff = cursor.fetchone()
-    return render_template('edit_staff.html', staff=staff,staff_list=staff_list, department_list=department_list,position=position)
+    return render_template('edit_staff.html', staff=staff,staff_list=staff_list, department_list=department_list)
 
 @app.route('/delete_staff/<int:staff_id>')
 def delete_staff(staff_id):
