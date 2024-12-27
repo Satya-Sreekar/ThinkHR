@@ -1,7 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session,send_file
 from flask_mysqldb import MySQL
 from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from docx import Document
+from docx.shared import Pt
+import docx2pdf
+from io import BytesIO
+from datetime import datetime, timedelta
 import yaml
+import pythoncom
+
+
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -16,6 +27,7 @@ app.config['MYSQL_PASSWORD'] = db_config['mysql_password']
 app.config['MYSQL_DB'] = db_config['mysql_db']
 
 mysql = MySQL(app)
+
 # Admin console for managing staff
 @app.route('/')
 def index():
@@ -240,6 +252,149 @@ def company_hierarchy():
     tree_data = [build_tree(manager) for manager in top_managers]
 
     return render_template('hierarchy.html', tree_data=tree_data)
+
+@app.route('/attendence')
+def home():
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+    SELECT 
+        s.id, 
+        s.name, 
+        d.name AS department, 
+        CASE 
+            WHEN (SELECT COUNT(*) FROM attendance a WHERE a.staff_id = s.id AND a.checkout_time IS NULL) > 0 
+            THEN 'checked_in'
+            ELSE 'checked_out'
+        END AS attendance_status
+    FROM staff s
+    LEFT JOIN department d ON s.department = d.id
+""")
+
+    staff_list = cursor.fetchall()
+    return render_template('attendence.html', staff_list=staff_list)
+
+# Mark attendance
+@app.route('/checkin/<int:staff_id>', methods=['POST'])
+def checkin(staff_id):
+    cursor = mysql.connection.cursor()
+    cursor.execute("INSERT INTO attendance (staff_id, checkin_time) VALUES (%s, NOW())", [staff_id])
+    mysql.connection.commit()
+    flash('Staff checked in successfully!', 'success')
+    return redirect(url_for('home'))
+
+@app.route('/checkout/<int:staff_id>', methods=['POST'])
+def checkout(staff_id):
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        UPDATE attendance 
+        SET checkout_time = NOW() 
+        WHERE staff_id = %s AND checkout_time IS NULL
+        ORDER BY checkin_time DESC LIMIT 1
+    """, [staff_id])
+    mysql.connection.commit()
+    flash('Staff checked out successfully!', 'success')
+    return redirect(url_for('home'))
+
+# Function to generate an invoice based on user input
+def generate_invoice(data):
+    # Load the template
+    doc = Document("invoice.docx")
+
+    # Update dynamic fields
+    for para in doc.paragraphs:
+        if "Grand Total:" in para.text:
+            para.text = f"Grand Total: Rupees {data['grand_total_text']} Rs.{data['grand_total']}/-"
+
+    # Update Table 1 (Header Details)
+    table1 = doc.tables[0]  # Assuming Table 1 holds header information
+    invoice_date = datetime.strptime(data["invoice_date"], "%Y-%m-%d").strftime("%B %d, %Y")
+    table1.rows[1].cells[0].text = invoice_date
+    run = table1.rows[1].cells[0].paragraphs[0].runs[0]
+    run.font.size = Pt(16)
+
+    table1.rows[1].cells[1].text = f"INVOICE#{data['invoice_number']}"
+    run = table1.rows[1].cells[1].paragraphs[0].runs[0]
+    run.font.size = Pt(16)
+
+    # Update Table 2 (Due Date)
+    table2 = doc.tables[1]  # Assuming Table 2 holds due date
+    invoice_date_obj = datetime.strptime(data["invoice_date"], "%Y-%m-%d")
+    due_date = (invoice_date_obj + timedelta(days=7)).strftime("%B %d, %Y")
+    table2.rows[1].cells[3].text = due_date
+    
+    
+
+    # Update Table 3 (Services Summary)
+    table3 = doc.tables[2]
+    new_row = table3.add_row()  # Add a new row for services
+    new_row.cells[0].text = "1"
+    new_row.cells[1].text = data["billable_hours"]
+    new_row.cells[2].text = f"Rs. {data['amount_per_hour']}"
+    new_row.cells[3].text = data["start_date"]
+    new_row.cells[4].text = data["end_date"]
+    new_row.cells[5].text = f"Rs. {data['subtotal']}"
+
+    # Update Table 5 (Totals Table)
+    table5 = doc.tables[4]  # Assuming Table 5 holds totals
+    table5.rows[0].cells[1].text = f"Rs. {data['subtotal']}"
+    table5.rows[1].cells[1].text = f"Rs. {data['gst']}"
+    table5.rows[2].cells[1].text = f"Rs. {data['grand_total']}"
+
+    # Save the modified document in memory
+    output_stream = BytesIO()
+    doc.save(output_stream)
+    output_stream.seek(0)
+
+    return output_stream
+@app.route('/reciept')
+def reciept():
+    return render_template('invoice_form.html')
+
+
+@app.route('/generate', methods=['POST'])
+def pdf_download():
+    file_name = generate()
+
+    try:
+        pythoncom.CoInitialize()
+        docx2pdf.convert(file_name)  # DOCX -> PDF (in-place or specify output path)
+    finally:
+        pythoncom.CoUninitialize()
+
+    pdf_file_name = file_name.replace("docx", "pdf")
+    return send_file(pdf_file_name, as_attachment=True)
+
+def generate():
+    # 1. Gather form data
+    form_data = request.form
+    invoice_data = {
+        "invoice_date": form_data.get("invoice_date"),
+        "invoice_number": form_data.get("invoice_number"),
+        "billable_hours": form_data.get("billable_hours"),
+        "amount_per_hour": form_data.get("amount_per_hour"),
+        "start_date": form_data.get("start_date"),
+        "end_date": form_data.get("end_date"),
+        "subtotal": form_data.get("subtotal"),
+        "gst": form_data.get("gst"),
+        "grand_total": form_data.get("grand_total"),
+        "grand_total_text": form_data.get("grand_total_text"),
+        "total_amount": form_data.get("total_amount"),
+    }
+
+    # 2. Generate the invoice (returns a BytesIO in-memory file)
+    invoice_file = generate_invoice(invoice_data)  # invoice_file is BytesIO
+    
+    # 3. Choose the output filename
+    file_name = f"invoices/invoice_{invoice_data['invoice_number']}.docx"
+
+    # 4. Write the BytesIO object to an actual file on disk
+    with open(file_name, "wb") as f:
+        f.write(invoice_file.getvalue())
+
+    # 5. Return the name of the file (or handle as needed)
+    return file_name
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

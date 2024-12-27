@@ -56,7 +56,9 @@ CREATE TABLE `staff` (
   `name` varchar(255) NOT NULL,
   `department` varchar(255) NOT NULL,
   `reportee` int(11) NOT NULL,
-  `email` varchar(100) DEFAULT NULL
+  `email` varchar(100) DEFAULT NULL,
+  `position` varchar(100) DEFAULT NULL,
+  
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
