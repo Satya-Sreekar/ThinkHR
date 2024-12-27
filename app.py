@@ -58,13 +58,14 @@ def add_staff():
         department = request.form['department']
         reportee = request.form['reportee']
         email = request.form['email']
+        positon = request.form['position']
         
         if name and department and reportee and email:
             cursor = mysql.connection.cursor()
             # Insert new staff into the staff table
             cursor.execute(
-                "INSERT INTO staff (name, department, reportee, email) VALUES (%s, %s, %s, %s)",
-                (name, department, reportee, email)
+                "INSERT INTO staff (name, department, reportee, email, position) VALUES (%s, %s, %s, %s, %s)",
+                (name, department, reportee, email, positon)
             )
             mysql.connection.commit()
             flash('Staff added successfully!', 'success')
@@ -86,13 +87,14 @@ def edit_staff(staff_id):
         department = request.form['department']
         email = request.form['email']
         reportee = request.form['reportee']
-        cursor.execute("UPDATE staff SET name = %s, department = %s, email = %s, reportee=%s WHERE id = %s", (name, department,email,reportee, staff_id))
+        position = request.form['position']
+        cursor.execute("UPDATE staff SET name = %s, department = %s, email = %s, reportee=%s, position=%s WHERE id = %s", (name, department,email,reportee,position, staff_id))
         mysql.connection.commit()
         flash('Staff updated successfully!', 'success')
         return redirect(url_for('admin'))
     cursor.execute("SELECT * FROM staff WHERE id = %s", [staff_id])
     staff = cursor.fetchone()
-    return render_template('edit_staff.html', staff=staff,staff_list=staff_list, department_list=department_list)
+    return render_template('edit_staff.html', staff=staff,staff_list=staff_list, department_list=department_list,position=position)
 
 @app.route('/delete_staff/<int:staff_id>')
 def delete_staff(staff_id):
