@@ -350,20 +350,37 @@ def generate_invoice(data):
 def reciept():
     return render_template('invoice_form.html')
 
-@app.route('/generate', methods=['POST'])
-def convert_to_pdf(input_path, output_path):
-    try:
-        subprocess.run([
-            "libreoffice",
-            "--headless",
-            "--convert-to",
-            "pdf",
-            "--outdir",
-            output_path.rsplit("/", 1)[0],
-            input_path
-        ], check=True)
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to convert {input_path} to PDF: {e}")
+from flask import Flask, send_file
+import tempfile
+import os
+from docx import Document
+
+
+@app.route("/generate", methods=["POST"])
+def generate_pdf():
+    # 1. Create the .docx file
+    doc = Document()
+    doc.add_paragraph("Sample invoice text goes here.")
+    
+    # Use a temporary directory to store the files
+    with tempfile.TemporaryDirectory() as tmpdir:
+        docx_path = os.path.join(tmpdir, "INVOICE.docx")
+        pdf_path = os.path.join(tmpdir, "invoice.pdf")
+        
+        # Save the .docx file to disk
+        doc.save(docx_path)
+        
+        # 2. Convert the .docx to .pdf
+        convert_to_pdf(docx_path, pdf_path)
+
+        # 3. Send the .pdf as a downloadable file
+        return send_file(
+            pdf_path,
+            as_attachment=True,
+            download_name="invoice.pdf",
+            mimetype="application/pdf",
+        )
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
