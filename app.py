@@ -9,7 +9,7 @@ import docx2pdf
 from io import BytesIO
 from datetime import datetime, timedelta
 import yaml
-import pythoncom
+# import pythoncom
 
 
 
@@ -350,41 +350,20 @@ def generate_invoice(data):
 def reciept():
     return render_template('invoice_form.html')
 
-
 @app.route('/generate', methods=['POST'])
-def generate_pdf():
-    # 1. Create or load your .docx (example uses python-docx to create)
-    doc = Document()
-    doc.add_paragraph("Hello from a docx file!")
-    docx_io = io.BytesIO()
-    doc.save(docx_io)
-    docx_io.seek(0)
-
-    # 2. Write the in-memory DOCX to a temporary file
-    with tempfile.TemporaryDirectory() as tmpdir:
-        docx_path = os.path.join(tmpdir, "file.docx")
-        pdf_path = os.path.join(tmpdir, "file.pdf")
-
-        # Write .docx to disk
-        with open(docx_path, "wb") as f:
-            f.write(docx_io.getvalue())
-
-        # 3. Run unoconv to convert DOCX -> PDF
-        #    unoconv -f pdf -o file.pdf file.docx
+def convert_to_pdf(input_path, output_path):
+    try:
         subprocess.run([
-            "unoconv",
-            "-f", "pdf",
-            "-o", pdf_path,
-            docx_path
+            "libreoffice",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            output_path.rsplit("/", 1)[0],
+            input_path
         ], check=True)
-
-        # 4. Send the PDF back to the user
-        return send_file(
-            pdf_path,
-            as_attachment=True,
-            download_name="converted.pdf",
-            mimetype="application/pdf",
-        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to convert {input_path} to PDF: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
