@@ -46,7 +46,8 @@ def admin():
     cursor.execute("""
     SELECT 
         s.id, 
-        s.name, 
+        s.name,
+        s.position, 
         d.name AS department FROM staff s
     LEFT JOIN department d ON s.department = d.id
 """)
