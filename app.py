@@ -9,7 +9,7 @@ import docx2pdf
 from io import BytesIO
 from datetime import datetime, timedelta
 import yaml
-# import pythoncom
+import pythoncom
 
 
 
@@ -349,38 +349,42 @@ def generate_invoice(data):
 @app.route('/reciept')
 def reciept():
     return render_template('invoice_form.html')
-
-from flask import Flask, send_file
-import tempfile
-import os
-from docx import Document
-
-
-@app.route("/generate", methods=["POST"])
-def generate_pdf():
-    # 1. Create the .docx file
-    doc = Document()
-    doc.add_paragraph("Sample invoice text goes here.")
+@app.route('/generate', methods=['POST'])
+def pdf_download():
+    file_name = generate()
+    try:
+        pythoncom.CoInitialize()
+        docx2pdf.convert(file_name)  # DOCX -> PDF (in-place or specify output path)
+    finally:
+        pythoncom.CoUninitialize()
+    pdf_file_name = file_name.replace("docx", "pdf")
+    return send_file(pdf_file_name, as_attachment=True)
+def generate():
+    # 1. Gather form data
+    form_data = request.form
+    invoice_data = {
+        "invoice_date": form_data.get("invoice_date"),
+        "invoice_number": form_data.get("invoice_number"),
+        "billable_hours": form_data.get("billable_hours"),
+        "amount_per_hour": form_data.get("amount_per_hour"),
+        "start_date": form_data.get("start_date"),
+        "end_date": form_data.get("end_date"),
+        "subtotal": form_data.get("subtotal"),
+        "gst": form_data.get("gst"),
+        "grand_total": form_data.get("grand_total"),
+        "grand_total_text": form_data.get("grand_total_text"),
+        "total_amount": form_data.get("total_amount"),
+    }
+    # 2. Generate the invoice (returns a BytesIO in-memory file)
+    invoice_file = generate_invoice(invoice_data)  # invoice_file is BytesIO
     
-    # Use a temporary directory to store the files
-    with tempfile.TemporaryDirectory() as tmpdir:
-        docx_path = os.path.join(tmpdir, "INVOICE.docx")
-        pdf_path = os.path.join(tmpdir, "invoice.pdf")
-        
-        # Save the .docx file to disk
-        doc.save(docx_path)
-        
-        # 2. Convert the .docx to .pdf
-        convert_to_pdf(docx_path, pdf_path)
-
-        # 3. Send the .pdf as a downloadable file
-        return send_file(
-            pdf_path,
-            as_attachment=True,
-            download_name="invoice.pdf",
-            mimetype="application/pdf",
-        )
-
+    # 3. Choose the output filename
+    file_name = f"invoices/invoice_{invoice_data['invoice_number']}.docx"
+    # 4. Write the BytesIO object to an actual file on disk
+    with open(file_name, "wb") as f:
+        f.write(invoice_file.getvalue())
+    # 5. Return the name of the file (or handle as needed)
+    return file_name
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
