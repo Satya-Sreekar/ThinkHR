@@ -353,16 +353,18 @@ def reciept():
 
 @app.route('/generate', methods=['POST'])
 def pdf_download():
+    # Generate the .docx file (e.g., "invoice_123.docx")
     file_name = generate()
 
-    try:
-        pythoncom.CoInitialize()
-        docx2pdf.convert(file_name)  # DOCX -> PDF (in-place or specify output path)
-    finally:
-        pythoncom.CoUninitialize()
+    # Convert .docx to .pdf using docx2pdf (LibreOffice on Ubuntu)
+    docx2pdf.convert(file_name)
 
+    # Build the .pdf file name
     pdf_file_name = file_name.replace("docx", "pdf")
+
+    # Send the PDF as a download
     return send_file(pdf_file_name, as_attachment=True)
+
 
 def generate():
     # 1. Gather form data

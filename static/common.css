@@ -52,8 +52,7 @@ body {
     font-family: 'JetBrains Mono', monospace;
     font-size: 1.2rem;
     /* Collapsed text size */
-    font-weight: bold;
-    white-space: nowrap;
+     white-space: nowrap;
     margin-top: 5px;
     transition: all 0.5s ease, margin 0.5s ease, font-size 0.5s ease;
     text-align: center;
