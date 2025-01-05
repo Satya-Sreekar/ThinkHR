@@ -387,5 +387,52 @@ def generate():
     # 5. Return the name of the file (or handle as needed)
     return file_name
 
+
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        name = request.form['username']
+        role = request.form['role']
+        password = request.form['password']
+        print(f"Login attempt: {name}, {role}, {password}")
+        
+        try:
+            cursor = mysql.connection.cursor()
+            # Query to check if user exists
+            query = """
+                SELECT id, username, role FROM staff 
+                WHERE username = %s AND role = %s AND password = %s
+            """
+            cursor.execute(query, (name, role, password))
+            user = cursor.fetchone()
+            
+            if user:
+                session['user_id'] = user[0]
+                session['username'] = user[1]
+                session['role'] = user[2]
+                flash('Login successful!', 'success')
+                
+                # Redirect based on role
+                if user[2] == 'admin':
+                    return redirect(url_for('index'))
+                else:
+                    return redirect(url_for('index'))
+            else:
+                flash('Invalid username, role, or password.', 'danger')
+        except Exception as e:
+            flash(f"An error occurred: {e}", 'danger')
+        finally:
+            cursor.close()
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    # Clear the user's session
+    session.clear()
+    flash('You have been logged out successfully.', 'success')
+    return redirect(url_for('login'))
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

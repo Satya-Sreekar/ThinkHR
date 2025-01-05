@@ -16,7 +16,9 @@
         <div class="logo">
             <img src="{{ url_for('static', filename='LOGO.png') }}" alt="Logo">
             <span class="logo-text">
-                <span>Think</span><span>HR</span>
+                <b>
+                    <span>Think</span><span>HR</span>
+                </b>
             </span>
         </div>
         <ul class="nav flex-column">
@@ -68,6 +70,11 @@
                     <span>Invoice Generator</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link text-dark" href="/logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
         </ul>
     </div>
 

@@ -62,6 +62,13 @@
                     </div>
                 {% endif %}
                 {% endwith %}
+                <div class="mb-3">
+                    <label for="role" class="form-label">Role</label>
+                    <select name="role" id="role" class="form-select" required>
+                        <option value="admin">Admin</option>
+                        <option value="staff">Staff</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-primary w-100">Login</button>
                 <div class="form-text text-center mt-3">
                     Don't have an account? Contact the administrator to register.
