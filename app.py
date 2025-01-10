@@ -10,12 +10,17 @@ from io import BytesIO
 from datetime import datetime, timedelta
 import yaml
 import pythoncom
-
-
+import os
+from werkzeug.utils import secure_filename
+from collections import deque
+import os
+import pandas as pd
+import locale
 
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 
 # Database configuration
 with open('db.yaml', 'r') as db_file:
@@ -27,20 +32,42 @@ app.config['MYSQL_PASSWORD'] = db_config['mysql_password']
 app.config['MYSQL_DB'] = db_config['mysql_db']
 
 mysql = MySQL(app)
+# Flask-Login configuration
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'  # Redirect to the 'login' route if not authenticated
 
-# Admin console for managing staff
+# User class
+class User(UserMixin):
+    def __init__(self, id, username, role):
+        self.id = id
+        self.username = username
+        self.role = role
+
+# User loader function for Flask-Login
+@login_manager.user_loader
+def load_user(user_id):
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT id, username, role FROM staff WHERE id = %s", [user_id])
+    user = cursor.fetchone()
+    if user:
+        return User(id=user[0], username=user[1], role=user[2])
+    return None
+
 @app.route('/')
+@login_required
 def index():
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT COUNT(*) FROM staff")
-    total_staff = cursor.fetchone()[0]  # Get the total number of staff
+    total_staff = cursor.fetchone()[0]
     cursor.execute("SELECT COUNT(DISTINCT staff_id) FROM attendance WHERE DATE(checkin_time) = CURDATE()")
-    checked_in_today = cursor.fetchone()[0] 
+    checked_in_today = cursor.fetchone()[0]
     cursor.execute("SELECT COUNT(id) FROM department")
     department_count = cursor.fetchone()[0]
     return render_template('index.html', total_staff=total_staff, present_today=checked_in_today, department_count=department_count)
    
 @app.route('/admin')
+@login_required
 def admin():
     cursor = mysql.connection.cursor()
     cursor.execute("""
@@ -55,6 +82,7 @@ def admin():
     return render_template('admin.html', staff_list=staff_list)
 
 @app.route('/onboard', methods=['GET'])
+@login_required
 def onboard():
     # Fetch all existing staff for the dropdown
     cursor = mysql.connection.cursor()
@@ -65,6 +93,7 @@ def onboard():
     return render_template('onboard.html', staff_list=staff_list, department_list=department_list)
 
 @app.route('/add_staff', methods=['POST'])
+@login_required
 def add_staff():
     if request.method == 'POST':
         name = request.form['name']
@@ -89,6 +118,7 @@ def add_staff():
 
 
 @app.route('/edit_staff/<int:staff_id>', methods=['GET', 'POST'])
+@login_required
 def edit_staff(staff_id):
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT id, name FROM staff")
@@ -110,6 +140,7 @@ def edit_staff(staff_id):
     return render_template('edit_staff.html', staff=staff,staff_list=staff_list, department_list=department_list)
 
 @app.route('/delete_staff/<int:staff_id>')
+@login_required
 def delete_staff(staff_id):
     cursor = mysql.connection.cursor()
     cursor.execute("DELETE FROM staff WHERE id = %s", [staff_id])
@@ -118,6 +149,7 @@ def delete_staff(staff_id):
     return redirect(url_for('admin'))
 
 @app.route('/summary')
+@login_required
 def summary():
     period = request.args.get('period', 'daily')
     selected_date_str = request.args.get('date')
@@ -189,6 +221,7 @@ def summary():
         return render_template('summary.html', summary_data=summary_data, period='weekly', week_start=week_start, week_end=week_end, previous_week=previous_week, next_week=next_week, min_date=min_date, max_date=max_date, timedelta=timedelta)
 
 @app.route('/departments')
+@login_required
 def department():
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM department")
@@ -196,6 +229,7 @@ def department():
     return render_template('departments.html', department_list=department_list)
 
 @app.route('/add_department', methods=['POST'])
+@login_required
 def add_department():
     if request.method == 'POST':
         name = request.form['department_name']
@@ -208,53 +242,74 @@ def add_department():
             flash('Please fill in all fields.', 'danger')
         return redirect(url_for('department'))   
 
-
 @app.route('/company_hierarchy')
+@login_required
 def company_hierarchy():
     cursor = mysql.connection.cursor()
 
-    # Query to fetch all staff members with department and their direct managers
+    # Updated query to include position
     cursor.execute("""
-        SELECT s.id, s.name, s.reportee, d.name AS department_name
+        SELECT s.id, s.name, s.reportee, d.name AS department_name, s.position
         FROM staff s
         JOIN department d ON s.department = d.id
+        ORDER BY d.name ASC, s.reportee ASC
     """)
 
     # Fetch all staff data
     staff_data = cursor.fetchall()
 
     # Create a dictionary to map staff by their id
-    staff_dict = {staff[0]: {'id': staff[0], 'name': staff[1], 'reportee': staff[2], 'department': staff[3], 'subordinates': []} for staff in staff_data}
+    staff_dict = {
+        staff[0]: {
+            'id': staff[0],
+            'name': staff[1],
+            'reportee': staff[2],
+            'department': staff[3],
+            'position': staff[4],  # Include position here
+            'subordinates': []
+        }
+        for staff in staff_data
+    }
 
     # Build the hierarchy (tree structure)
     for staff in staff_data:
-        staff_id, name, manager_id, department_name = staff
+        staff_id, name, manager_id, department_name, position = staff
         if manager_id != 0:  # If the staff member has a manager
             staff_dict[manager_id]['subordinates'].append(staff_dict[staff_id])
 
     # Top-level managers (those with reportee = 0)
     top_managers = [staff_dict[staff[0]] for staff in staff_data if staff[2] == 0]
 
-    # Limit the recursion level to avoid exceeding max recursion depth
-    def build_tree(manager, level=1):
-        """ Recursively build a tree but keep track of recursion depth """
-        tree = {
-            'name': manager['name'],
-            'department': manager['department'],
-            'subordinates': []
-        }
+    def bfs_tree(manager):
+        """ Build a tree using BFS to ensure layer-by-layer traversal. """
+        from collections import deque
+        queue = deque([(manager, 0)])  # (current_node, level)
+        tree = []
 
-        if level < 11:  # Set maximum depth
-            for sub in manager['subordinates']:
-                tree['subordinates'].append(build_tree(sub, level + 1))
+        while queue:
+            node, level = queue.popleft()
+
+            # Add current node to the tree
+            if len(tree) <= level:
+                tree.append([])
+            tree[level].append({
+                'name': node['name'],
+                'department': node['department'],
+                'position': node['position']
+            })
+
+            # Add subordinates to the queue
+            for sub in sorted(node['subordinates'], key=lambda x: x['id']):
+                queue.append((sub, level + 1))
         return tree
 
-    # Convert staff data to a tree with limited depth
-    tree_data = [build_tree(manager) for manager in top_managers]
+    # Generate trees for all top managers
+    trees = [bfs_tree(manager) for manager in top_managers]
 
-    return render_template('hierarchy.html', tree_data=tree_data)
+    return render_template('hierarchy.html', trees=trees)
 
 @app.route('/attendence')
+@login_required
 def home():
     cursor = mysql.connection.cursor()
     cursor.execute("""
@@ -276,6 +331,7 @@ def home():
 
 # Mark attendance
 @app.route('/checkin/<int:staff_id>', methods=['POST'])
+@login_required
 def checkin(staff_id):
     cursor = mysql.connection.cursor()
     cursor.execute("INSERT INTO attendance (staff_id, checkin_time) VALUES (%s, NOW())", [staff_id])
@@ -284,6 +340,7 @@ def checkin(staff_id):
     return redirect(url_for('home'))
 
 @app.route('/checkout/<int:staff_id>', methods=['POST'])
+@login_required
 def checkout(staff_id):
     cursor = mysql.connection.cursor()
     cursor.execute("""
@@ -320,7 +377,7 @@ def generate_invoice(data):
     # Update Table 2 (Due Date)
     table2 = doc.tables[1]  # Assuming Table 2 holds due date
     invoice_date_obj = datetime.strptime(data["invoice_date"], "%Y-%m-%d")
-    due_date = (invoice_date_obj + timedelta(days=7)).strftime("%B %d, %Y")
+    due_date = (invoice_date_obj + timedelta(days=14)).strftime("%B %d, %Y")
     table2.rows[1].cells[3].text = due_date
     
     
@@ -347,10 +404,14 @@ def generate_invoice(data):
     output_stream.seek(0)
 
     return output_stream
+
 @app.route('/reciept')
+@login_required
 def reciept():
     return render_template('invoice_form.html')
+
 @app.route('/generate', methods=['POST'])
+@login_required
 def pdf_download():
     file_name = generate()
     try:
@@ -387,52 +448,108 @@ def generate():
     # 5. Return the name of the file (or handle as needed)
     return file_name
 
-
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        name = request.form['username']
+        username = request.form['username']
         role = request.form['role']
         password = request.form['password']
-        print(f"Login attempt: {name}, {role}, {password}")
-        
-        try:
-            cursor = mysql.connection.cursor()
-            # Query to check if user exists
-            query = """
-                SELECT id, username, role FROM staff 
-                WHERE username = %s AND role = %s AND password = %s
-            """
-            cursor.execute(query, (name, role, password))
-            user = cursor.fetchone()
-            
-            if user:
-                session['user_id'] = user[0]
-                session['username'] = user[1]
-                session['role'] = user[2]
-                flash('Login successful!', 'success')
-                
-                # Redirect based on role
-                if user[2] == 'admin':
-                    return redirect(url_for('index'))
-                else:
-                    return redirect(url_for('index'))
-            else:
-                flash('Invalid username, role, or password.', 'danger')
-        except Exception as e:
-            flash(f"An error occurred: {e}", 'danger')
-        finally:
-            cursor.close()
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT id, username, role, password FROM staff WHERE username = %s AND role = %s", (username, role))
+        user = cursor.fetchone()
+        # if user and check_password_hash(user[3], password):  # Ensure password hashing
+        if user and user[3]== password:  # Ensure password hashing
+            user_obj = User(id=user[0], username=user[1], role=user[2])
+            login_user(user_obj)
+            flash('Login successful!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid credentials.', 'danger')
     return render_template('login.html')
 
 @app.route('/logout')
+@login_required
 def logout():
-    # Clear the user's session
-    session.clear()
-    flash('You have been logged out successfully.', 'success')
+    logout_user()
+    flash('Logged out successfully.', 'success')
     return redirect(url_for('login'))
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    cursor = mysql.connection.cursor()
+
+    # Fetch current user details
+    cursor.execute("""
+        SELECT s.id, s.name, s.username, s.email, s.phone, s.position, d.name AS department, 
+               r.name AS reportee, s.profile_picture
+        FROM staff s
+        LEFT JOIN department d ON s.department = d.id
+        LEFT JOIN staff r ON s.reportee = r.id
+        WHERE s.id = %s
+    """, [current_user.id])
+    user = cursor.fetchone()
+
+    if not user:
+        flash('User not found!', 'danger')
+        return redirect(url_for('login'))
+
+    # Map user data
+    user_data = {
+        'id': user[0],
+        'name': user[1],
+        'username': user[2],
+        'email': user[3],
+        'phone': user[4],
+        'position': user[5],
+        'department': user[6],
+        'reportee': user[7],
+        'profile_picture': user[8]
+    }
+
+    if request.method == 'POST':
+        # Only update editable fields
+        name = request.form['name']
+        phone = request.form['phone']
+        profile_picture = None
+
+        # Handle profile picture upload
+        if 'profile_picture' in request.files:
+            file = request.files['profile_picture']
+            if file and file.filename != '':
+                # Validate file type
+                allowed_extensions = {'png', 'jpg', 'jpeg'}
+                file_extension = file.filename.rsplit('.', 1)[-1].lower()
+                if file_extension not in allowed_extensions:
+                    flash('Invalid file type! Only PNG, JPG, and JPEG are allowed.', 'danger')
+                    return redirect(url_for('profile'))
+
+                # Generate a unique filename
+                filename = f"{current_user.id}_{secure_filename(file.filename)}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+                # Save the file
+                file.save(filepath)
+
+                # Save the relative path (using forward slashes)
+                profile_picture = f"uploads/{filename}"
+
+        # Update the database
+        if profile_picture:
+            cursor.execute("""
+                UPDATE staff SET name = %s, phone = %s, profile_picture = %s WHERE id = %s
+            """, (name, phone, profile_picture, current_user.id))
+        else:
+            cursor.execute("""
+                UPDATE staff SET name = %s, phone = %s WHERE id = %s
+            """, (name, phone, current_user.id))
+
+        mysql.connection.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('profile.html', user=user_data)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

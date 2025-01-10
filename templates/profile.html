@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">My Profile</h2>
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-body">
+                    <!-- Profile Header -->
+                    <div class="text-center mb-4">
+                        {% if user.profile_picture %}
+                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                             alt="Profile Picture" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='default-avatar.png') }}" 
+                             alt="Default Avatar" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                        {% endif %}
+                        <h3 class="font-weight-bold">{{ user.name }}</h3>
+                        <p class="text-muted mb-1">{{ user.position }}</p>
+                        <p class="text-muted">{{ user.department }}</p>
+                    </div>
+
+                    <!-- View Mode -->
+                    <div id="view-mode">
+                        <div class="row mb-3">
+                            <div class="col-5 col-sm-4 font-weight-bold">Username:</div>
+                            <div class="col-7 col-sm-8">{{ user.username }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 col-sm-4 font-weight-bold">Email:</div>
+                            <div class="col-7 col-sm-8">{{ user.email }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 col-sm-4 font-weight-bold">Phone:</div>
+                            <div class="col-7 col-sm-8">{{ user.phone }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 col-sm-4 font-weight-bold">Position:</div>
+                            <div class="col-7 col-sm-8">{{ user.position }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 col-sm-4 font-weight-bold">Department:</div>
+                            <div class="col-7 col-sm-8">{{ user.department }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 col-sm-4 font-weight-bold">Reportee:</div>
+                            <div class="col-7 col-sm-8">{{ user.reportee }}</div>
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-primary btn-block btn-sm" id="edit-button">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div id="edit-mode" style="display: none;">
+                        <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data">
+                            <!-- File Upload Option -->
+                            <div class="form-group text-center">
+                                <label for="profile_picture" class="btn btn-secondary btn-sm mt-2">
+                                    <i class="fas fa-upload"></i> Change Profile Picture
+                                </label>
+                                <input type="file" id="profile_picture" name="profile_picture" accept="image/*"
+                                    style="display: none;">
+                            </div>
+                            <div class="form-group">
+                                <label for="name" class="font-weight-bold">Name</label>
+                                <input type="text" id="name" name="name" class="form-control" value="{{ user.name }}"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone" class="font-weight-bold">Phone</label>
+                                <input type="text" id="phone" name="phone" class="form-control" value="{{ user.phone }}"
+                                    required>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-success btn-block btn-sm">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-block btn-sm" id="cancel-button">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // JavaScript for toggling between view and edit modes
+    document.getElementById('edit-button').addEventListener('click', function () {
+        document.getElementById('view-mode').style.display = 'none';
+        document.getElementById('edit-mode').style.display = 'block';
+    });
+
+    document.getElementById('cancel-button').addEventListener('click', function () {
+        document.getElementById('view-mode').style.display = 'block';
+        document.getElementById('edit-mode').style.display = 'none';
+    });
+</script>
+{% endblock %}

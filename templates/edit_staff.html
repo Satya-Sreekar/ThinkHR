@@ -15,7 +15,6 @@
             <label for="department">Department</label>
             <select class="form-control" id="department" name="department" required>       
                 {% for dept in department_list %}
-                <!-- Force type consistency by converting values to string for both staff[2] and dept[0] -->
                 <option value="{{ dept[0] }}" {% if staff[2]|string == dept[0]|string %}selected{% endif %}>
                     {{ dept[1] }} {% if staff[2]|string == dept[0]|string %}- Current{% endif %}
                 </option>
@@ -29,11 +28,9 @@
         <div class="form-group">
             <label for="reportee">Select New Reportee</label>
             <select class="form-control" id="reportee" name="reportee" required>
-                <!-- Option for no reportee (HOD role) -->
                 <option value="0" {% if staff[3]==0 %}selected{% endif %}>
                     No One (HOD) {% if staff[3] == 0 %}- Current{% endif %}
                 </option>
-                <!-- List other staff members -->
                 {% for person in staff_list %}
                 <option value="{{ person[0] }}" {% if staff[3]==person[0] %}selected{% endif %}>
                     {{ person[1] }} {% if staff[3] == person[0] %}- Current{% endif %}
@@ -45,8 +42,78 @@
             <label for="email">Email</label>
             <input type="email" class="form-control" id="email" name="email" value="{{ staff[4] }}" required>
         </div>
-        <button type="submit" class="btn btn-primary">Update Staff</button>
+        <div class="d-flex justify-content-between align-items-center">
+            <button type="submit" class="btn btn-primary">Update Staff</button>
+            
+            <!-- Delete button -->
+            <button type="button" class="btn btn-danger" onclick="showDeleteConfirmation()">Delete</button>
+        </div>
     </form>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none;">
+    <div class="modal-backdrop">
+        <div class="modal-content">
+            <h5>Confirm Deletion</h5>
+            <p>This action cannot be undone. Type <strong>confirm</strong> in the box below to proceed.</p>
+            <input type="text" id="deleteConfirmInput" class="form-control" placeholder="Type 'confirm'" />
+            <div class="modal-footer">
+                <button onclick="closeDeleteModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="confirmDelete()" class="btn btn-danger">Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Simple styles for the modal */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        width: 400px;
+        text-align: center;
+    }
+    .modal-footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+</style>
+
+<script>
+    // Show the confirmation modal
+    function showDeleteConfirmation() {
+        document.getElementById('deleteModal').style.display = 'block';
+    }
+
+    // Close the confirmation modal
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    // Confirm deletion only if "confirm" is typed
+    function confirmDelete() {
+        const input = document.getElementById('deleteConfirmInput').value.trim();
+        if (input.toLowerCase() === 'confirm') {
+            // Redirect to delete staff URL
+            window.location.href = "/delete_staff/{{ staff[0] }}";
+        } else {
+            alert('You must type "confirm" to proceed.');
+        }
+    }
+</script>
 
 {% endblock %}
