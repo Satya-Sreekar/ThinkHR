@@ -66,7 +66,7 @@ def index():
     department_count = cursor.fetchone()[0]
     return render_template('index.html', total_staff=total_staff, present_today=checked_in_today, department_count=department_count)
    
-@app.route('/admin')
+@app.route('/mannage_staff')
 @login_required
 def admin():
     cursor = mysql.connection.cursor()
@@ -79,7 +79,7 @@ def admin():
     LEFT JOIN department d ON s.department = d.id
 """)
     staff_list = cursor.fetchall()
-    return render_template('admin.html', staff_list=staff_list)
+    return render_template('mannage_staff.html', staff_list=staff_list)
 
 @app.route('/onboard', methods=['GET'])
 @login_required
