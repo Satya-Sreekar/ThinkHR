@@ -68,7 +68,7 @@ def index():
    
 @app.route('/mannage_staff')
 @login_required
-def admin():
+def mannage_staff():
     cursor = mysql.connection.cursor()
     cursor.execute("""
     SELECT 
@@ -114,7 +114,7 @@ def add_staff():
         else:
             flash('Please fill in all fields.', 'danger')
         
-        return redirect(url_for('admin'))
+        return redirect(url_for('mannage_staff'))
 
 
 @app.route('/edit_staff/<int:staff_id>', methods=['GET', 'POST'])
@@ -134,7 +134,7 @@ def edit_staff(staff_id):
         cursor.execute("UPDATE staff SET name = %s, department = %s, email = %s, reportee=%s, position=%s WHERE id = %s", (name, department,email,reportee,position, staff_id))
         mysql.connection.commit()
         flash('Staff updated successfully!', 'success')
-        return redirect(url_for('admin'))
+        return redirect(url_for('mannage_staff'))
     cursor.execute("SELECT * FROM staff WHERE id = %s", [staff_id])
     staff = cursor.fetchone()
     return render_template('edit_staff.html', staff=staff,staff_list=staff_list, department_list=department_list)
@@ -146,7 +146,7 @@ def delete_staff(staff_id):
     cursor.execute("DELETE FROM staff WHERE id = %s", [staff_id])
     mysql.connection.commit()
     flash('Staff deleted successfully!', 'success')
-    return redirect(url_for('admin'))
+    return redirect(url_for('mannage_staff'))
 
 @app.route('/summary')
 @login_required
