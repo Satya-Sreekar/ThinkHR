@@ -4,8 +4,18 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>Onboard New Staff</h1>
-    <form action="/add_staff" method="POST">
+    <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2">
+        <!-- Back button on the left -->
+        <a href="{{ url_for('ThinkStaff') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+      
+        <!-- Centered heading -->
+        <h1 class="display-5 mb-0 text-center flex-grow-1">Onboard Staff</h1>
+      
+        <!-- Placeholder to balance the layout -->
+        <div style="width: 90px;"></div>
+      </div>    <form action="/add_staff" method="POST">
         <!-- Form fields for adding staff -->
         <div class="form-group">
             <label for="name">Name</label>

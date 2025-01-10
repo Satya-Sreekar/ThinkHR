@@ -5,8 +5,18 @@
 {% block content %}
 <!-- Content -->
 <div class="content">
-    <h1 class="text-center">Attendance Summary</h1>
-
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-2">
+        <!-- Back button on the left -->
+        <a href="{{ url_for('ThinkStaff') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+    
+        <!-- Centered heading -->
+        <h1 class="display-5 mb-0 text-center flex-grow-1">Attendance Summary</h1>
+    
+        <!-- Placeholder to balance the layout -->
+        <div style="width: 90px;"></div>
+    </div>
     <!-- Period selection tabs -->
     <ul class="nav nav-tabs">
         <li class="nav-item">

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    Company Hierarchy
+Company Hierarchy
 {% endblock %}
 
 {% block content %}
@@ -95,26 +95,36 @@
     }
 </style>
 
-<h1 class="text-center my-4">Company Hierarchy</h1>
+<div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2" style="margin-left:1vw ;">
+    <!-- Back button on the left -->
+    <a href="{{ url_for('ThinkStaff') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
 
+    <!-- Centered heading -->
+    <h1 class="display-5 mb-0 text-center flex-grow-1">Company Hierarchy</h1>
+
+    <!-- Placeholder to balance the layout -->
+    <div style="width: 90px;"></div>
+</div>
 <div class="teams-container">
     {% for tree in trees %}
-        <div class="department-card">
-            <div class="department-title">{{ tree[0][0].department }}</div>
-            {% for level in tree %}
-                <div class="tier-container">
-                    <div class="tier-title">Level {{ loop.index }}</div>
-                    <div class="members-container">
-                        {% for member in level %}
-                            <div class="team-card">
-                                <h3>{{ member.name }}</h3>
-                                <p>{{ member.position }}</p>
-                            </div>
-                        {% endfor %}
-                    </div>
+    <div class="department-card">
+        <div class="department-title">{{ tree[0][0].department }}</div>
+        {% for level in tree %}
+        <div class="tier-container">
+            <div class="tier-title">Level {{ loop.index }}</div>
+            <div class="members-container">
+                {% for member in level %}
+                <div class="team-card">
+                    <h3>{{ member.name }}</h3>
+                    <p>{{ member.position }}</p>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
+        {% endfor %}
+    </div>
     {% endfor %}
 </div>
 

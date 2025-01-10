@@ -6,30 +6,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ThinkHR{% endblock %}</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/summary.css') }}">
+    <style>
+        /* Basic styling for flash messages */
+        .flash-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .flash-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Add styles for other categories if needed */
+    </style>
+    {% block head_extra %}{% endblock %}
+
 </head>
-<!-- Space to display flash messages -->
-<div class="flash-container position-fixed w-100" style="top: 10px; z-index: 1050;">
-    {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-    <div class="container">
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show shadow" role="alert">
-            <i class="fas fa-info-circle mr-2"></i> {{ message }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    {% endwith %}
-</div>
 
 <body>
+    <!-- Space to display flash messages -->
+    <div class="flash-container position-fixed w-100" style="top: 10px; z-index: 1050;">
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div class="container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show shadow" role="alert">
+                <i class="fas fa-info-circle mr-2"></i> {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo">
@@ -48,57 +75,27 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-dark" href="/onboard">
-                    <i class="fas fa-user-plus"></i>
-                    <span>Onboard Staff</span>
+                <a class="nav-link text-dark" href="/ThinkStaff">
+                    <i class="fas fa-users"></i>
+                    <span>ThinkStaff</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link text-dark" href="/mannage_staff">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Staff Management</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-dark" href="/attendence">
-                    <i class="fas fa-user-clock"></i>
-                    <span>Clock-in-out</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-dark" href="/summary">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Attendance Reports</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-dark" href="/departments">
-                    <i class="fas fa-building"></i>
-                    <span>Departments</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-dark" href="/company_hierarchy">
-                    <i class="fas fa-sitemap"></i>
-                    <span>Company Hierarchy</span>
+            <li>
+                <a class="nav-link text-dark" href="/transactions">
+                    <i class="fas fa-money-check-alt"></i>
+                    <span>ThinkTransactions</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-dark" href="/reciept">
                     <i class="fas fa-file-invoice"></i>
-                    <span>Invoice Generator</span>
+                    <span>ThinkInvoice</span>
                 </a>
             </li>
             <li>
                 <a class="nav-link text-dark" href="/profile">
                     <i class="fas fa-user"></i>
                     <span>Profile</span>
-                </a>
-            </li>
-            <li>
-                <a class="nav-link text-dark" href="/expenses">
-                    <i class="fas fa-money-bill-wave"></i>
-                    <span>Expenses</span>
                 </a>
             </li>
             <li class="nav-item mt-auto"></li>
@@ -109,14 +106,24 @@
             </li>
         </ul>
     </div>
+
     <!-- Content -->
     <div class="content">
-
         {% block content %}{% endblock %}
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript to auto-close flash messages after 5 seconds -->
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+                $('.alert').alert('close');
+            }, 5000); // 5000 milliseconds = 5 seconds
+        });
+    </script>
+    {% block scripts_extra %}{% endblock %}
 </body>
 
 </html>

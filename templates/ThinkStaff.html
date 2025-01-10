@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}ThinkStaff{% endblock %}
+{% block content %}
+<!-- Content -->
+<div class="content">
+  <center>
+    <h1 style="font-family: 'JetBrains Mono', monospace;font-weight: 700;">Think<span style="color: #FF5055;">Staff</span></h1>
+  </center>
+  <div class="dashboard-row">
+    <!-- Manage Staff Widget -->
+    <a href="{{ url_for('mannage_staff') }}" class="widget">
+      <i class="fas fa-user-shield"></i>
+      <h4>Manage Staff</h4>
+      <p>{{ total_staff or 'N/A' }}</p>
+    </a>
+    <!-- Onboard Staff Widget -->
+    <a href="{{ url_for('onboard') }}" class="widget">
+      <i class="fas fa-user-plus"></i>
+      <h4>Onboard Staff</h4>
+      <p>New Employees</p>
+    </a>
+    <!-- Company Hierarchy Widget -->
+    <a href="{{ url_for('company_hierarchy') }}" class="widget">
+      <i class="fas fa-sitemap"></i>
+      <h4>Company Hierarchy</h4>
+      <p>View Structure</p>
+    </a>
+    <!-- Departments Widget -->
+    <a href="{{ url_for('department') }}" class="widget">
+      <i class="fas fa-building"></i>
+      <h4>Departments</h4>
+      <p>{{ department_count or 'N/A' }}</p>
+    </a>
+   <!-- Attendance Widget-->
+    <a href="{{ url_for('summary')}}" class="widget">
+      <i class="fas fa-chart-bar"></i>
+      <h4>Attendance Summary</h4>
+      <p>Present Now: {{ present_today }}</p>
+    </a>
+    <!-- Manual Clocking -->
+    <a href="{{ url_for('attendence')}}" class="widget">
+      <i class="fas fa-user-clock"></i>
+      <h4>Manual Clocking</h4>
+      <p>Click to Clock</p>
+    </a>
+  </div>
+</div>
+{% endblock %}

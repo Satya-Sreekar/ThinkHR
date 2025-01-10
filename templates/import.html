@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Import Transactions{% endblock %}
+{% block content %}
+    <div class="container my-5">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2" style="margin-left:1vw ;">
+                <!-- Back button on the left -->
+                <a href="{{ url_for('transactions') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+            
+                <!-- Centered heading -->
+                <h1 class="display-5 mb-0 text-center flex-grow-1">Import Transactions</h1>
+            
+                <!-- Placeholder to balance the layout -->
+                <div style="width: 90px;"></div>
+            </div>            <p class="lead">Upload an Excel file with the headings: Description, Date, Expense, Income, Closing Balance.</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="alert-container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- File Upload Form -->
+        <div class="card shadow-lg">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select Excel File</label>
+                        <input type="file" class="form-control" name="file" id="file" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Upload and Import</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

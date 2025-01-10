@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}ThinkTransaction{% endblock %}
+{% block content %}
+<!-- Content -->
+<div class="content">
+  <center>
+    <h1 style="font-family: 'JetBrains Mono', monospace;font-weight: 700;">Think<span style="color: #FF5055;">Transaction</span></h1>
+  </center>
+  <div class="dashboard-row">
+    <!-- Add Transaction Widget -->
+    <a href="{{ url_for('add_entry') }}" class="widget">
+      <i class="fas fa-plus-circle"></i>
+      <h4>Add Transaction</h4>
+      <p>Create New</p>
+    </a>
+    <!-- View Transactions Widget -->
+    <a href="{{ url_for('view_entries') }}" class="widget">
+      <i class="fas fa-eye"></i>
+      <h4>View Transactions</h4>
+      <p>History</p>
+    </a>
+    <!-- Import Transactions Widget -->
+    <a href="{{ url_for('import_transactions') }}" class="widget">
+      <i class="fas fa-file-import"></i>
+      <h4>Import Transactions</h4>
+      <p>From Excel</p>
+    </a>
+    <!-- Financial Summary Widget -->
+    <div class="widget">
+      <i class="fas fa-dollar-sign"></i>
+      <h4>Financial Summary</h4>
+      <p>Income: ₹{{ total_income or '0' }}</p>
+      <p>Expense: ₹{{ total_expense or '0' }}</p>
+      <p>Balance: ₹{{ balance or '0' }}</p>
+    </div>
+    <!-- Additional transaction-related widgets can be added here -->
+  </div>
+</div>
+{% endblock %}

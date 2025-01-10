@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}View Transactions{% endblock %}
+
+{% block head_extra %}
+<style>
+  .nowrap,
+  th {
+    white-space: nowrap;
+  }
+  th {
+    text-align: center;
+  }
+  a {
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+  }
+  a:hover {
+    color: white;
+    text-decoration: none;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-3">  <!-- Changed to container with margin -->
+  <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2">
+    <!-- Back button on the left -->
+    <a href="{{ url_for('transactions') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+
+    <!-- Centered heading -->
+    <h1 class="display-5 mb-0 text-center flex-grow-1">Transaction History</h1>
+
+    <!-- Placeholder to balance the layout -->
+    <div style="width: 90px;"></div>
+  </div>
+
+  <div class="card shadow-lg">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>
+                <a href="/view?sort_by=id&sort_order={{ 'asc' if sort_by != 'id' or sort_order == 'desc' else 'desc' }}">
+                  # {% if sort_by == 'id' %}{{ '▲' if sort_order == 'asc' else '▼' }}{% endif %}
+                </a>
+              </th>
+              <th>
+                <a href="/view?sort_by=type&sort_order={{ 'asc' if sort_by != 'type' or sort_order == 'desc' else 'desc' }}">
+                  Type {% if sort_by == 'type' %}{{ '▲' if sort_order == 'asc' else '▼' }}{% endif %}
+                </a>
+              </th>
+              <th>
+                <a href="/view?sort_by=category&sort_order={{ 'asc' if sort_by != 'category' or sort_order == 'desc' else 'desc' }}">
+                  Category {% if sort_by == 'category' %}{{ '▲' if sort_order == 'asc' else '▼' }}{% endif %}
+                </a>
+              </th>
+              <th>
+                <a href="/view?sort_by=amount&sort_order={{ 'asc' if sort_by != 'amount' or sort_order == 'desc' else 'desc' }}">
+                  Amount {% if sort_by == 'amount' %}{{ '▲' if sort_order == 'asc' else '▼' }}{% endif %}
+                </a>
+              </th>
+              <th>
+                <a href="/view?sort_by=date&sort_order={{ 'asc' if sort_by != 'date' or sort_order == 'desc' else 'desc' }}">
+                  Date {% if sort_by == 'date' %}{{ '▲' if sort_order == 'asc' else '▼' }}{% endif %}
+                </a>
+              </th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for transaction in transactions %}
+            <tr>
+              <td>{{ transaction[0] }}</td>
+              <td>
+                {% if transaction[1] == 'Income' %}
+                <span class="badge bg-success">{{ transaction[1] }}</span>
+                {% else %}
+                <span class="badge bg-danger">{{ transaction[1] }}</span>
+                {% endif %}
+              </td>
+              <td>{{ transaction[2] }}</td>
+              <td>₹{{ transaction[3] }}</td>
+              <td class="nowrap">{{ transaction[4] }}</td>
+              <td>{{ transaction[5] }}</td>
+              <td>
+                <a href="/edit/{{ transaction[0] }}" class="btn btn-warning btn-sm">Edit</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mt-4">
+    {% if page > 1 %}
+    <a href="/view?page={{ page - 1 }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}" class="btn btn-secondary">Previous</a>
+    {% else %}
+    <button class="btn btn-secondary" disabled>Previous</button>
+    {% endif %}
+
+    <span>Page {{ page }} of {{ total_pages }}</span>
+
+    {% if page < total_pages %}
+    <a href="/view?page={{ page + 1 }}&sort_by={{ sort_by }}&sort_order={{ sort_order }}" class="btn btn-secondary">Next</a>
+    {% else %}
+    <button class="btn btn-secondary" disabled>Next</button>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

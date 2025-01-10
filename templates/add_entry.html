@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Add Entry{% endblock %}
+
+{% block head_extra %}
+<style>
+  .dropdown-item {
+    cursor: pointer;
+  }
+  /* Optional: Additional styling to match your site's vibe */
+  .header-back {
+    position: relative;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+  }
+  .header-back a {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+</style>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <!-- Header with Back Button and Centered Title -->
+  <div class="header-back">
+    <a href="{{ url_for('transactions') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+    <h1 class="display-5 mb-0">Add New Entry</h1>
+  </div>
+
+  <div class="card shadow-lg">
+    <div class="card-body">
+      <form method="post">
+        <div class="mb-3">
+          <label for="type" class="form-label">Type</label>
+          <select name="type" id="type" class="form-select" required>
+            <option value="Income">Income</option>
+            <option value="Expense">Expense</option>
+          </select>
+        </div>
+        <div class="mb-3 position-relative">
+          <label for="category" class="form-label">Category</label>
+          <input type="text" name="category" id="category" class="form-control" placeholder="e.g., Salary, Rent" autocomplete="off" required>
+          <div id="categoryDropdown" class="dropdown-menu w-100"></div>
+        </div>
+        <div class="mb-3">
+          <label for="amount" class="form-label">Amount</label>
+          <input type="number" step="0.01" name="amount" id="amount" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label for="date" class="form-label">Date</label>
+          <input type="date" name="date" id="date" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea name="description" id="description" class="form-control" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Add Entry</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const categoryInput = document.getElementById('category');
+    const dropdown = document.getElementById('categoryDropdown');
+
+    // Fetch categories from the server
+    let categories = [];
+    fetch('/get_categories')
+      .then(response => response.json())
+      .then(data => {
+        categories = data.categories.map(cat => cat.charAt(0).toUpperCase() + cat.slice(1));
+      });
+
+    // Show dropdown on input
+    categoryInput.addEventListener('input', () => {
+      const query = categoryInput.value.toLowerCase();
+      const filtered = categories.filter(cat => cat.toLowerCase().includes(query));
+      dropdown.innerHTML = '';
+      dropdown.classList.add('show');
+      filtered.forEach(cat => {
+        const item = document.createElement('div');
+        item.classList.add('dropdown-item');
+        item.textContent = cat;
+        item.onclick = () => {
+          categoryInput.value = cat;
+          dropdown.classList.remove('show');
+        };
+        dropdown.appendChild(item);
+      });
+      if (!filtered.length) dropdown.classList.remove('show');
+    });
+
+    // Close dropdown on blur
+    categoryInput.addEventListener('blur', () => {
+      setTimeout(() => dropdown.classList.remove('show'), 200);
+    });
+  });
+</script>
+{% endblock %}
