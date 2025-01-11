@@ -10,10 +10,11 @@ from docx.shared import Pt
 import docx2pdf
 from io import BytesIO
 import yaml
-import pythoncom
 from werkzeug.utils import secure_filename
 import sys
 import subprocess
+if sys.platform.startswith('win'):
+    import pythoncom
 
 # --------------------------------------------------------------------------
 # App Initialization and Configuration
@@ -498,7 +499,7 @@ def generate():
 # --------------------------------------------------------------------------
 # Financial Transactions and Related Routes
 # --------------------------------------------------------------------------
-@app.route('/transactions')
+@app.route('/ThinkTransactions')
 @login_required
 def transactions():
     return render_template('ThinkTransactions.html')
