@@ -93,23 +93,11 @@ def index():
     checked_in_today = cur.fetchone()[0]
     cur.execute("SELECT COUNT(id) FROM department")
     department_count = cur.fetchone()[0]
-    # Financial data
-    cur.execute("SELECT IFNULL(SUM(amount), 0) FROM transactions WHERE type = 'Income'")
-    total_income_val = cur.fetchone()[0]
-    cur.execute("SELECT IFNULL(SUM(amount), 0) FROM transactions WHERE type = 'Expense'")
-    total_expense_val = cur.fetchone()[0]
-    total_income = format_number_indian(total_income_val)
-    total_expense = format_number_indian(total_expense_val)
-    balance = format_number_indian(total_income_val - total_expense_val)
-    cur.close()
     return render_template(
         'index.html', 
         total_staff=total_staff, 
         present_today=checked_in_today, 
         department_count=department_count,
-        total_income=total_income,
-        total_expense=total_expense,
-        balance=balance
     )
 
 # --------------------------------------------------------------------------
@@ -446,6 +434,11 @@ def generate_invoice(data):
     output_stream.seek(0)
     return output_stream
 
+@app.route('/ThinkInvoice')
+@login_required
+def ThinkInvoice():
+    return render_template('ThinkInvoice.html')
+
 @app.route('/reciept')
 @login_required
 def reciept():
@@ -502,7 +495,104 @@ def generate():
 @app.route('/ThinkTransactions')
 @login_required
 def transactions():
-    return render_template('ThinkTransactions.html')
+    cur = mysql.connection.cursor()
+
+    # Total financial data
+    cur.execute("SELECT IFNULL(SUM(amount), 0) FROM transactions WHERE type = 'Income'")
+    total_income_val = cur.fetchone()[0]
+    cur.execute("SELECT IFNULL(SUM(amount), 0) FROM transactions WHERE type = 'Expense'")
+    total_expense_val = cur.fetchone()[0]
+    balance_val = total_income_val - total_expense_val
+
+    total_income = format_number_indian(total_income_val)
+    total_expense = format_number_indian(total_expense_val)
+    balance = format_number_indian(balance_val)
+
+    # Current Year
+    current_year = datetime.now().year
+    cur.execute(f"SELECT IFNULL(SUM(amount), 0) FROM transactions WHERE type = 'Income' AND YEAR(date) = {current_year}")
+    current_year_income_val = cur.fetchone()[0]
+    cur.execute(f"SELECT IFNULL(SUM(amount), 0) FROM transactions WHERE type = 'Expense' AND YEAR(date) = {current_year}")
+    current_year_expense_val = cur.fetchone()[0]
+    current_year_balance_val = current_year_income_val - current_year_expense_val
+
+    current_year_income = format_number_indian(current_year_income_val)
+    current_year_expense = format_number_indian(current_year_expense_val)
+    current_year_balance = format_number_indian(current_year_balance_val)
+
+    # Previous Year
+    previous_year = current_year - 1
+    cur.execute(f"SELECT IFNULL(SUM(amount), 0) FROM transactions WHERE type = 'Income' AND YEAR(date) = {previous_year}")
+    previous_year_income_val = cur.fetchone()[0]
+    cur.execute(f"SELECT IFNULL(SUM(amount), 0) FROM transactions WHERE type = 'Expense' AND YEAR(date) = {previous_year}")
+    previous_year_expense_val = cur.fetchone()[0]
+    previous_year_balance_val = previous_year_income_val - previous_year_expense_val
+
+    previous_year_income = format_number_indian(previous_year_income_val)
+    previous_year_expense = format_number_indian(previous_year_expense_val)
+    previous_year_balance = format_number_indian(previous_year_balance_val)
+
+    # Current Month
+    current_month = datetime.now().month
+    cur.execute(f"""
+        SELECT IFNULL(SUM(amount), 0) FROM transactions 
+        WHERE type = 'Income' AND YEAR(date) = {current_year} AND MONTH(date) = {current_month}
+    """)
+    current_month_income_val = cur.fetchone()[0]
+    cur.execute(f"""
+        SELECT IFNULL(SUM(amount), 0) FROM transactions 
+        WHERE type = 'Expense' AND YEAR(date) = {current_year} AND MONTH(date) = {current_month}
+    """)
+    current_month_expense_val = cur.fetchone()[0]
+    current_month_balance_val = current_month_income_val - current_month_expense_val
+
+    current_month_income = format_number_indian(current_month_income_val)
+    current_month_expense = format_number_indian(current_month_expense_val)
+    current_month_balance = format_number_indian(current_month_balance_val)
+
+    # Previous Month
+    first_day_current_month = datetime.now().replace(day=1)
+    last_day_previous_month = first_day_current_month - timedelta(days=1)
+    previous_month_year = last_day_previous_month.year
+    previous_month = last_day_previous_month.month
+
+    cur.execute(f"""
+        SELECT IFNULL(SUM(amount), 0) FROM transactions 
+        WHERE type = 'Income' AND YEAR(date) = {previous_month_year} AND MONTH(date) = {previous_month}
+    """)
+    previous_month_income_val = cur.fetchone()[0]
+    cur.execute(f"""
+        SELECT IFNULL(SUM(amount), 0) FROM transactions 
+        WHERE type = 'Expense' AND YEAR(date) = {previous_month_year} AND MONTH(date) = {previous_month}
+    """)
+    previous_month_expense_val = cur.fetchone()[0]
+    previous_month_balance_val = previous_month_income_val - previous_month_expense_val
+
+    previous_month_income = format_number_indian(previous_month_income_val)
+    previous_month_expense = format_number_indian(previous_month_expense_val)
+    previous_month_balance = format_number_indian(previous_month_balance_val)
+
+    cur.close()
+
+    return render_template(
+        'ThinkTransactions.html',
+        total_income=total_income,
+        total_expense=total_expense,
+        balance=balance,
+        current_year_income=current_year_income,
+        current_year_expense=current_year_expense,
+        current_year_balance=current_year_balance,
+        previous_year_income=previous_year_income,
+        previous_year_expense=previous_year_expense,
+        previous_year_balance=previous_year_balance,
+        current_month_income=current_month_income,
+        current_month_expense=current_month_expense,
+        current_month_balance=current_month_balance,
+        previous_month_income=previous_month_income,
+        previous_month_expense=previous_month_expense,
+        previous_month_balance=previous_month_balance,
+    )
+
 
 @app.route('/add', methods=["GET", "POST"])
 @login_required

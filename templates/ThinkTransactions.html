@@ -5,7 +5,9 @@
 <!-- Content -->
 <div class="content">
   <center>
-    <h1 style="font-family: 'JetBrains Mono', monospace;font-weight: 700;">Think<span style="color: #FF5055;">Transaction</span></h1>
+    <h1 style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">
+      Think<span style="color: #FF5055;">Transaction</span>
+    </h1>
   </center>
   <div class="dashboard-row">
     <!-- Add Transaction Widget -->
@@ -29,12 +31,87 @@
     <!-- Financial Summary Widget -->
     <div class="widget">
       <i class="fas fa-dollar-sign"></i>
-      <h4>Financial Summary</h4>
+      <h4>All Time</h4>
       <p>Income: ₹{{ total_income or '0' }}</p>
       <p>Expense: ₹{{ total_expense or '0' }}</p>
       <p>Balance: ₹{{ balance or '0' }}</p>
     </div>
-    <!-- Additional transaction-related widgets can be added here -->
+
+    <!-- Previous Year Summary Widget -->
+    {% if previous_year_balance|replace(',', '')|float > 0 %}
+    <div class="widget" style="border-left: 5px solid green;">
+      <i class="fas fa-calendar-alt"></i>
+      <h4>Previous Year</h4>
+      <p>Income: ₹{{ previous_year_income or '0' }}</p>
+      <p>Expense: ₹{{ previous_year_expense or '0' }}</p>
+      <p>Profit: ₹{{ previous_year_balance or '0' }}</p>
+    </div>
+    {% elif previous_year_balance|replace(',', '')|float < 0 %}
+    <div class="widget" style="border-left: 5px solid red;">
+      <i class="fas fa-calendar-alt"></i>
+      <h4>Previous Year</h4>
+      <p>Income: ₹{{ previous_year_income or '0' }}</p>
+      <p>Expense: ₹{{ previous_year_expense or '0' }}</p>
+      <p>Loss: ₹{{ previous_year_balance or '0' }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Current Year Summary Widget -->
+    {% if current_year_balance|replace(',', '')|float > 0 %}
+    <div class="widget" style="border-left: 5px solid green;">
+      <i class="fas fa-calendar-alt"></i>
+      <h4>Current Year</h4>
+      <p>Income: ₹{{ current_year_income or '0' }}</p>
+      <p>Expense: ₹{{ current_year_expense or '0' }}</p>
+      <p>Profit: ₹{{ current_year_balance or '0' }}</p>
+    </div>
+    {% elif current_year_balance|replace(',', '')|float < 0 %}
+    <div class="widget" style="border-left: 5px solid red;">
+      <i class="fas fa-calendar-alt"></i>
+      <h4>Current Year</h4>
+      <p>Income: ₹{{ current_year_income or '0' }}</p>
+      <p>Expense: ₹{{ current_year_expense or '0' }}</p>
+      <p>Loss: ₹{{ current_year_balance or '0' }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Previous Month Summary Widget -->
+    {% if previous_month_balance|replace(',', '')|float > 0 %}
+    <div class="widget" style="border-left: 5px solid green;">
+      <i class="fas fa-calendar-alt"></i>
+      <h4>Previous Month</h4>
+      <p>Income: ₹{{ previous_month_income or '0' }}</p>
+      <p>Expense: ₹{{ previous_month_expense or '0' }}</p>
+      <p>Profit: ₹{{ previous_month_balance or '0' }}</p>
+    </div>
+    {% elif previous_month_balance|replace(',', '')|float < 0 %}
+    <div class="widget" style="border-left: 5px solid red;">
+      <i class="fas fa-calendar-alt"></i>
+      <h4>Previous Month</h4>
+      <p>Income: ₹{{ previous_month_income or '0' }}</p>
+      <p>Expense: ₹{{ previous_month_expense or '0' }}</p>
+      <p>Loss: ₹{{ previous_month_balance or '0' }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Current Month Summary Widget -->
+    {% if current_month_balance|replace(',', '')|float > 0 %}
+    <div class="widget" style="border-left: 5px solid green;">
+      <i class="fas fa-calendar-alt"></i>
+      <h4>Current Month</h4>
+      <p>Income: ₹{{ current_month_income or '0' }}</p>
+      <p>Expense: ₹{{ current_month_expense or '0' }}</p>
+      <p>Profit: ₹{{ current_month_balance or '0' }}</p>
+    </div>
+    {% elif current_month_balance|replace(',', '')|float < 0 %}
+    <div class="widget" style="border-left: 5px solid red;">
+      <i class="fas fa-calendar-alt"></i>
+      <h4>Current Month</h4>
+      <p>Income: ₹{{ current_month_income or '0' }}</p>
+      <p>Expense: ₹{{ current_month_expense or '0' }}</p>
+      <p>Loss: ₹{{ current_month_balance or '0' }}</p>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

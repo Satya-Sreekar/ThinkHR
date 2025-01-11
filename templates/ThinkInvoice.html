@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}ThinkOMega{% endblock %}
+
+{% block content %}
+<!-- Content -->
+<div class="content">
+    <center>
+        <h1 style="font-family: 'JetBrains Mono', monospace;font-weight: 700;">Think<span style="color: #FF5055;">Invoice</span></h1>
+    </center>
+    <div class="dashboard-row">
+        <!-- Generate Inovice Widget -->
+        <a href="/reciept" class="widget">
+            <i class="fas fa-file-invoice"></i>
+            <h4>New Invoice</h4>
+            <p>{{ total_invoices }}</p>
+        </a>
+        <!-- View Invoices Widget -->
+        <a href="/viewinvoice" class="widget">
+            <i class="fas fa-history"></i>
+            <h4>Past Invoices</h4>
+            <p>{{ total_invoices }}</p>
+        </a>
+
+    </div>
+</div>
+        {% endblock %}
